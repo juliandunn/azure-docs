@@ -38,31 +38,36 @@ The following diagram depicts the high-level Chef architecture.
 
 Chef has three main architectural components: Chef Server, Chef Client (node), and Chef Workstation.
 
-The Chef Server is the management point and there are two options for the Chef Server: a hosted solution or an on-premises solution. We will be using a hosted solution for this tutorial.
+The Chef Server is the management point and there are two options for the Chef Server: a hosted solution or an on-premises solution.
 
 The Chef Client (node) is the agent that sits on the servers you are managing.
 
-The Chef Workstation is the admin workstation where we create policies and execute management commands. We run the **knife** command from the Chef Workstation to manage the infrastructure.
+The Chef Workstation, which is the name for both the admin workstation where you create policies and execute management commands and the software package of Chef tools.
+Generally, you'll see _your workstation_ as the location where you perform actions and _Chef Workstation_ for the software package.
+For example, you'll download the knife command as part of _Chef Workstation_, but you run knife commands from _your workstation_ to manage infrastructure.
 
-There is also the concept of “Cookbooks” and “Recipes”. These are effectively the policies we define and apply to the servers.
+Chef also the concepts of “Cookbooks” and “Recipes”, which are effectively the policies we define and apply to the servers.
 
-## Preparing the workstation
-First, lets prep the workstation. I’m using a standard Windows workstation. We need to create a directory to store the config files and cookbooks.
+## Preparing your workstation
 
-First create a directory called C:\chef.
+First, prep your workstation by creating a directory to store Chef configuration files and cookbooks.
 
-Then create a second directory called c:\chef\cookbooks.
+Create a directory called C:\chef.
 
-We now need to download the Azure settings file so Chef can communicate with the Azure subscription.
+## Setup Chef Server
 
-Download your publish settings using the PowerShell Azure [Get-​Azure​Publish​Settings​File](https://docs.microsoft.com/powershell/module/servicemanagement/azure/get-azurepublishsettingsfile?view=azuresmps-4.0.0) command. 
+This guide assumes that you will sign up for Hosted Chef.
 
-Save the publish settings file in C:\chef.
+If you're not already using a Chef Server, you can:
 
-## Creating a managed Chef account
+* Sign up for [Hosted Chef](https://manage.chef.io/signup), which is the fastest way to get started with Chef.
+* Install a standalone Chef Server on linux-based machine, following the [installation instructions](https://docs.chef.io/install_server.html) from [Chef Docs](https://docs.chef.io/).
+
+## Creating a hosted Chef account
+
 Sign up for a hosted Chef account [here](https://manage.chef.io/signup).
 
-During the signup process, you will be asked to create a new organization.
+During the sign-up process, you will be asked to create a new organization.
 
 ![][3]
 
@@ -77,7 +82,8 @@ Once your organization is created, download the starter kit.
 
 This starter kit zip file contains your organization config files and keys.
 
-## Configuring the Chef workstation
+## Configuring your Chef workstation
+
 Extract the content of the chef-starter.zip to C:\chef.
 
 Copy all files under chef-starter\chef-repo\.chef to your c:\chef directory.
@@ -104,12 +110,27 @@ Your knife.rb file should now look similar to the following example.
 
 These lines will ensure that Knife references the cookbooks directory under c:\chef\cookbooks, and also uses our Azure Publish Settings file during Azure operations.
 
-## Installing the Chef Development Kit
-Next, [download and install](http://downloads.getchef.com/chef-dk/windows) the ChefDK (Chef Development Kit) to set up your Chef Workstation.
+## Install Chef Workstation
+
+Next, [download and install](https://downloads.chef.io/chef-workstation/) Chef Workstation.
+
+New ad-hoc commands `chef-run` and ChefDK CLI commands such as `chef` are available via Chef Workstation. See your installed version of Chef Workstation and the Chef tools with `chef -v`. You can also check your Workstation version by selecting "About Chef Workstation" from the Chef Workstation App.
+
+`chef --version` should return something like:
+
+```
+Chef Workstation: 0.2.29
+  chef-run: 0.2.2
+  Chef Client: 14.6.47
+  delivery-cli: master (6862f27aba89109a9630f0b6c6798efec56b4efe)
+  berks: 7.0.6
+  test-kitchen: 1.23.2
+  inspec: 3.0.12
+```
 
 ![][7]
 
-Install in the default location of c:\opscode. This install will take around 10 minutes.
+Install in the default location of c:\opscode. This install takes around 10 minutes.
 
 Confirm your PATH variable contains entries for C:\opscode\chefdk\bin;C:\opscode\chefdk\embedded\bin;c:\users\yourusername\.chefdk\gem\ruby\2.0.0\bin
 
@@ -121,7 +142,9 @@ If they are not there, make sure you add these paths!
 
 Reboot your workstation before you continue.
 
-Next, we will install the Knife Azure extension. This provides Knife with the “Azure Plugin”.
+### Install Knife Azurerm
+
+Next, install the Knife Azure extension. This provides Knife with the “Azure Plugin”.
 
 Run the following command.
 
@@ -142,18 +165,19 @@ To ensure everything is configured correctly, run the following command.
 
 If everything is configured correctly, you will see a list of available Azure images scroll through.
 
-Congratulations. The workstation is set up!
+Congratulations. Your workstation is set up!
 
 ## Creating a Cookbook
-A Cookbook is used by Chef to define a set of commands that you wish to execute on your managed client. Creating a Cookbook is straightforward and we use the **chef generate cookbook** command to generate the Cookbook template. I will be calling my Cookbook web server as I would like a policy that automatically deploys IIS.
+
+A Cookbook is used by Chef to define a set of commands that you wish to execute on your managed client. Creating a Cookbook is straightforward, just use the **chef generate cookbook** command to generate the Cookbook template. This cookbook is for a web server that automatically deploys IIS.
 
 Under your C:\Chef directory run the following command.
 
     chef generate cookbook webserver
 
-This will generate a set of files under the directory C:\Chef\cookbooks\webserver. We now need to define the set of commands we would like the Chef client to execute on the managed virtual machine.
+This command generates a set of files under the directory C:\Chef\cookbooks\webserver. Next, define the set of commands for the Chef client to execute on the managed virtual machine.
 
-The commands are stored in the file default.rb. In this file, I’ll be defining a set of commands that installs IIS, starts IIS and copies a template file to the wwwroot folder.
+The commands are stored in the file default.rb. In this file, define a set of commands that installs IIS, starts IIS and copies a template file to the wwwroot folder.
 
 Modify the C:\chef\cookbooks\webserver\recipes\default.rb file and add the following lines.
 
@@ -174,27 +198,28 @@ Modify the C:\chef\cookbooks\webserver\recipes\default.rb file and add the follo
 Save the file once you are done.
 
 ## Creating a template
-As we mentioned previously, we need to generate a template file which will be used as the default.html page.
 
-Run the following command to generate the template.
+In this step, you'll generate a template file to used as the default.html page.
+
+Run the following command to generate the template:
 
     chef generate template webserver Default.htm
 
-Now navigate to the C:\chef\cookbooks\webserver\templates\default\Default.htm.erb file. Edit the file by adding some simple “Hello World” HTML code, and then save the file.
+Navigate to the `C:\chef\cookbooks\webserver\templates\default\Default.htm.erb` file. Edit the file by adding some simple “Hello World” HTML code, and then save the file.
 
 ## Upload the Cookbook to the Chef Server
-In this step, we are taking a copy of the Cookbook that we have created on the local machine and uploading it to the Chef Hosted Server. Once uploaded, the Cookbook will appear under the **Policy** tab.
+In this step, you make a copy of the Cookbook that you have created on the local machine and upload it to the Chef Hosted Server. Once uploaded, the Cookbook appears under the **Policy** tab.
 
     knife cookbook upload webserver
 
 ![][9]
 
 ## Deploy a virtual machine with Knife Azure
-We will now deploy an Azure virtual machine and apply the “Webserver” Cookbook which will install the IIS web service and default web page.
+Deploy an Azure virtual machine and apply the “Webserver” Cookbook which installs the IIS web service and default web page.
 
 In order to do this, use the **knife azure server create** command.
 
-Am example of the command appears next.
+An example of the command appears next.
 
     knife azure server create --azure-dns-name 'diegotest01' --azure-vm-name 'testserver01' --azure-vm-size 'Small' --azure-storage-account 'portalvhdsxxxx' --bootstrap-protocol 'cloud-api' --azure-source-image 'a699494373c04fc0bc8f2bb1389d6106__Windows-Server-2012-Datacenter-201411.01-en.us-127GB.vhd' --azure-service-location 'Southeast Asia' --winrm-user azureuser --winrm-password 'myPassword123' --tcp-endpoints 80,3389 --r 'recipe[webserver]'
 
@@ -205,7 +230,7 @@ The parameters are self-explanatory. Substitute your particular variables and ru
 > 
 > 
 
-Once you run the command, go to the Azure portal and you will see your machine begin to provision.
+Once you run the command, go to the Azure portal to see your machine begin to provision.
 
 ![][13]
 
@@ -213,13 +238,13 @@ The command prompt appears next.
 
 ![][10]
 
-Once the deployment is complete, we should be able to connect to the web service over port 80 as we had opened the port when we provisioned the virtual machine with the Knife Azure command. As this virtual machine is the only virtual machine in my cloud service, I’ll connect it with the cloud service url.
+Once the deployment is complete, you should be able to connect to the web service over port 80, because you opened the port when you provisioned the virtual machine with the Knife Azure command. As this virtual machine is the only virtual machine in this cloud service, connect to it with the cloud service url.
 
 ![][11]
 
 As you can see, I got creative with my HTML code.
 
-Don’t forget we can also connect through an RDP session from the Azure portal via port 3389.
+Don’t forget you can also connect through an RDP session from the Azure portal via port 3389.
 
 I hope this has been helpful! Go and start your infrastructure as code journey with Azure today!
 
