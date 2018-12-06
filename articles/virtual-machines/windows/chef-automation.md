@@ -25,9 +25,7 @@ Chef is a great tool for delivering automation and desired state configurations.
 
 With the latest cloud API release, Chef provides seamless integration with Azure, giving you the ability to provision and deploy configuration states through a single command.
 
-In this article, you set up your Chef environment to provision Azure virtual machines and walk through creating a policy or “CookBook” and then deploying this cookbook to an Azure virtual machine.
-
-Let’s begin!
+In this article, you set up your Chef environment to provision Azure virtual machines and walk through creating a policy or “Cookbook” and then deploying this cookbook to an Azure virtual machine.
 
 ## Chef basics
 Before you begin, [review the basic concepts of Chef](http://www.chef.io/chef). 
@@ -63,7 +61,7 @@ If you're not already using a Chef Server, you can:
 * Sign up for [Hosted Chef](https://manage.chef.io/signup), which is the fastest way to get started with Chef.
 * Install a standalone Chef Server on linux-based machine, following the [installation instructions](https://docs.chef.io/install_server.html) from [Chef Docs](https://docs.chef.io/).
 
-## Creating a hosted Chef account
+### Creating a hosted Chef account
 
 Sign up for a hosted Chef account [here](https://manage.chef.io/signup).
 
@@ -78,63 +76,116 @@ Once your organization is created, download the starter kit.
 > [!NOTE]
 > If you receive a prompt warning you that your keys will be reset, it’s okay to proceed as we have no existing infrastructure configured as yet.
 > 
-> 
 
-This starter kit zip file contains your organization config files and keys.
+This starter kit zip file contains your organization configuration files and user key in the `.chef` directory.
 
-## Configuring your Chef workstation
+The `organization-validator.pem` must be downloaded separately, because it is a private key and private keys should not be stored on the Chef Server. From [Chef Manage](https://manage.chef.io/) and select "Reset Validation Key", which provides a file for you to download separately. Save the file to c:\chef.
 
-Extract the content of the chef-starter.zip to C:\chef.
+### Configuring your Chef workstation
+
+Extract the content of the chef-starter.zip to c:\chef.
 
 Copy all files under chef-starter\chef-repo\.chef to your c:\chef directory.
 
+Copy the `organization-validator.pem` file to c:\chef, if it is saved in c:\Downloads
+
 Your directory should now look something like the following example.
 
-![][5]
+```powershell
+    Directory: C:\Users\username\chef
 
-You should now have four files including the Azure publishing file in the root of c:\chef.
+Mode           LastWriteTime    Length Name
+----           -------------    ------ ----
+d-----    12/6/2018   6:41 PM           .chef
+d-----    12/6/2018   5:40 PM           chef-repo
+d-----    12/6/2018   5:38 PM           cookbooks
+d-----    12/6/2018   5:38 PM           roles
+-a----    12/6/2018   5:38 PM       495 .gitignore
+-a----    12/6/2018   5:37 PM      1678 azuredocs-validator.pem
+-a----    12/6/2018   5:38 PM      1674 user.pem
+-a----    12/6/2018   5:53 PM       414 knife.rb
+-a----    12/6/2018   5:38 PM      2341 README.md
+```
 
-The PEM files contain your organization and admin private keys for communication while the knife.rb file contains your knife configuration. We will need to edit the knife.rb file.
+You should now have five files and four directories (including the empty chef-repo directory) in the root of c:\chef.
 
-Open the file in your editor of choice and modify the “cookbook_path” by removing the /../ from the path so it appears as:
+### Edit knife.rb
+
+The PEM files contain your organization and administrative private keys for communication and the knife.rb file contains your knife configuration. We will need to edit the knife.rb file.
+
+Open the knife.rb file in the editor of your choice. The unaltered file should look something like:
+
+```rb
+current_dir = File.dirname(__FILE__)
+log_level           :info
+log_location        STDOUT
+node_name           "username"
+client_key          "#{current_dir}/username.pem"
+chef_server_url     "https://api.chef.io/organizations/myorg"
+cookbook_path       ["#{current_dir}/cookbooks"]
+```
+
+Modify the “cookbook_path” by removing the /../ from the path so it appears as:
 
     cookbook_path  ["#{current_dir}/cookbooks"]
 
-Also add the following line reflecting the name of your Azure publish settings file.
+<!-- Also add the following line reflecting the name of your Azure publish settings file.
 
-    knife[:azure_publish_settings_file] = "yourfilename.publishsettings"
+    knife[:azure_publish_settings_file] = "yourfilename.publishsettings" -->
+
+Add the following information to your knife.rb:
+
+validation_client_name   "myorg-validator"
+validation_key           ""#{current_dir}/myorg.pem"
 
 Your knife.rb file should now look similar to the following example.
 
+<!-- These lines will ensure that Knife references the cookbooks directory under c:\chef\cookbooks, and also uses our Azure Publish Settings file during Azure operations. -->
+
 ![][6]
 
-These lines will ensure that Knife references the cookbooks directory under c:\chef\cookbooks, and also uses our Azure Publish Settings file during Azure operations.
+// Giant problem with this section: Chef 12 uses a config.rb instead of knife.rb
+// However, the starter kit hasn't been updated
+// So, I don't think this will even work on the modern Chef
+
+// update image [6] knife.rb
+
+```rb
+knife.rb
+current_dir = File.dirname(__FILE__)
+log_level                :info
+log_location             STDOUT
+node_name                "kgarmoe"
+client_key               "#{current_dir}/kgarmoe.pem"
+chef_server_url          "https://api.chef.io/organizations/myorg"
+validation_client_name   "myorg-validator"
+validation_key           ""#{current_dir}/myorg.pem"
+cookbook_path            ["#{current_dir}/cookbooks"]
+# // knife[:azure_publish_settings_file] = "yourfilename.publishsettings"
+```
 
 ## Install Chef Workstation
 
 Next, [download and install](https://downloads.chef.io/chef-workstation/) Chef Workstation.
+Install Chef Workstation the default location. This installation may take a few minutes.
 
-New ad-hoc commands `chef-run` and ChefDK CLI commands such as `chef` are available via Chef Workstation. See your installed version of Chef Workstation and the Chef tools with `chef -v`. You can also check your Workstation version by selecting "About Chef Workstation" from the Chef Workstation App.
+On the desktop, you'll see a "CW PowerShell", which is an environment loaded with the tool you'll need for interacting with the Chef products. The CW Powershell makes new ad-hoc commands available, such as `chef-run` as well as traditional Chef CLI commands, such as `chef`. See your installed version of Chef Workstation and the Chef tools with `chef -v`. You can also check your Workstation version by selecting "About Chef Workstation" from the Chef Workstation App.
 
 `chef --version` should return something like:
+
+![][7]
+
+// Update image [7]
 
 ```
 Chef Workstation: 0.2.29
   chef-run: 0.2.2
-  Chef Client: 14.6.47
+  Chef Client: 14.6.47x
   delivery-cli: master (6862f27aba89109a9630f0b6c6798efec56b4efe)
   berks: 7.0.6
   test-kitchen: 1.23.2
   inspec: 3.0.12
 ```
-
-![][7]
-
-Install in the default location of c:\opscode. This install takes around 10 minutes.
-
-Confirm your PATH variable contains entries for C:\opscode\chefdk\bin;C:\opscode\chefdk\embedded\bin;c:\users\yourusername\.chefdk\gem\ruby\2.0.0\bin
-
-If they are not there, make sure you add these paths!
 
 > [!NOTE]
 > The order of the path is important! If your opscode paths are not in the correct order you will have issues. 
@@ -142,9 +193,11 @@ If they are not there, make sure you add these paths!
 
 Reboot your workstation before you continue.
 
-### Install Knife Azurerm
+### Install Knife Azure
 
-Next, install the Knife Azure extension. This provides Knife with the “Azure Plugin”.
+This tutorial assumes that you're using the Azure Resource Manager to interact with your virtual machine.
+
+Install the Knife Azure extension. This provides Knife with the “Azure Plugin”.
 
 Run the following command.
 

@@ -28,4 +28,4 @@ With Habitat, applications can run unmodified in any runtime environment. This i
 The Habitat project is sponsored by Chef. Habitat leverages Chef’s deep experience with infrastructure automation to bring unprecedented automation capabilities to applications. Chef offers commercial support for Habitat and builds a seamless integration between Habitat and Chef Automate to fully automate the application release cycle, from development to deployment.
 
 ## Next steps
-* TK CTA
+* [Try Habitat](https://www.habitat.sh/learn/)

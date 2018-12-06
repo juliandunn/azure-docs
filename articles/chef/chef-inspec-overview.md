@@ -27,4 +27,5 @@ InSpec's agentless detect mode enable you to quickly assess - at scale - your ex
 With InSpec, you can respond to audit questions at any time - not just at predetermined intervals such as quarterly or yearly. By continuously running InSpec tests, you enter an audit cycle knowing your exact compliance posture and history, rather than being surprised by an auditor’s findings.
 
 ## Next steps
-* TK [Try InSpec in the Azure Cloud Shell](/where/should/this/go)
+* Try InSpec in the Azure Cloud Shell
+[![Launch Cloud Shell](https://shell.azure.com/images/launchcloudshell.png "Launch Cloud Shell")](https://shell.azure.com)
