@@ -28,7 +28,7 @@ With the latest cloud API release, Chef provides seamless integration with Azure
 In this article, you set up your Chef environment to provision Azure virtual machines and walk through creating a policy or “Cookbook” and then deploying this cookbook to an Azure virtual machine.
 
 ## Chef basics
-Before you begin, [review the basic concepts of Chef](http://www.chef.io/chef). 
+Before you begin, [review the basic concepts of Chef](http://www.chef.io/chef).
 
 The following diagram depicts the high-level Chef architecture.
 
@@ -51,6 +51,8 @@ Chef also the concepts of “Cookbooks” and “Recipes”, which are effective
 First, prep your workstation by creating a directory to store Chef configuration files and cookbooks.
 
 Create a directory called C:\chef.
+
+Download your Azure Powershell [publish settings](https://docs.microsoft.com/en-us/dynamics-nav/how-to--download-and-import-publish-settings-and-subscription-information).
 
 ## Setup Chef Server
 
@@ -75,7 +77,7 @@ Once your organization is created, download the starter kit.
 
 > [!NOTE]
 > If you receive a prompt warning you that your keys will be reset, it’s okay to proceed as we have no existing infrastructure configured as yet.
-> 
+>
 
 This starter kit zip file contains your organization configuration files and user key in the `.chef` directory.
 
@@ -119,28 +121,28 @@ Open the knife.rb file in the editor of your choice. The unaltered file should l
 current_dir = File.dirname(__FILE__)
 log_level           :info
 log_location        STDOUT
-node_name           "username"
-client_key          "#{current_dir}/username.pem"
+node_name           "mynode"
+client_key          "#{current_dir}/user.pem"
 chef_server_url     "https://api.chef.io/organizations/myorg"
 cookbook_path       ["#{current_dir}/cookbooks"]
 ```
-
-Modify the “cookbook_path” by removing the /../ from the path so it appears as:
-
-    cookbook_path  ["#{current_dir}/cookbooks"]
-
-<!-- Also add the following line reflecting the name of your Azure publish settings file.
-
-    knife[:azure_publish_settings_file] = "yourfilename.publishsettings" -->
 
 Add the following information to your knife.rb:
 
 validation_client_name   "myorg-validator"
 validation_key           ""#{current_dir}/myorg.pem"
 
-Your knife.rb file should now look similar to the following example.
+Also add the following line reflecting the name of your Azure publish settings file.
 
-<!-- These lines will ensure that Knife references the cookbooks directory under c:\chef\cookbooks, and also uses our Azure Publish Settings file during Azure operations. -->
+    knife[:azure_publish_settings_file] = "yourfilename.publishsettings"
+
+Modify the “cookbook_path” by removing the /../ from the path so it appears as:
+
+    cookbook_path  ["#{current_dir}/cookbooks"]
+
+These lines will ensure that Knife references the cookbooks directory under c:\chef\cookbooks, and also uses our Azure Publish Settings file during Azure operations.
+
+Your knife.rb file should now look similar to the following example:
 
 ![][6]
 
@@ -155,13 +157,13 @@ knife.rb
 current_dir = File.dirname(__FILE__)
 log_level                :info
 log_location             STDOUT
-node_name                "kgarmoe"
-client_key               "#{current_dir}/kgarmoe.pem"
+node_name                "mynode"
+client_key               "#{current_dir}/user.pem"
 chef_server_url          "https://api.chef.io/organizations/myorg"
 validation_client_name   "myorg-validator"
 validation_key           ""#{current_dir}/myorg.pem"
 cookbook_path            ["#{current_dir}/cookbooks"]
-# // knife[:azure_publish_settings_file] = "yourfilename.publishsettings"
+knife[:azure_publish_settings_file] = "yourfilename.publishsettings"
 ```
 
 ## Install Chef Workstation
@@ -172,10 +174,6 @@ Install Chef Workstation the default location. This installation may take a few 
 On the desktop, you'll see a "CW PowerShell", which is an environment loaded with the tool you'll need for interacting with the Chef products. The CW Powershell makes new ad-hoc commands available, such as `chef-run` as well as traditional Chef CLI commands, such as `chef`. See your installed version of Chef Workstation and the Chef tools with `chef -v`. You can also check your Workstation version by selecting "About Chef Workstation" from the Chef Workstation App.
 
 `chef --version` should return something like:
-
-![][7]
-
-// Update image [7]
 
 ```
 Chef Workstation: 0.2.29
@@ -188,8 +186,8 @@ Chef Workstation: 0.2.29
 ```
 
 > [!NOTE]
-> The order of the path is important! If your opscode paths are not in the correct order you will have issues. 
-> 
+> The order of the path is important! If your opscode paths are not in the correct order you will have issues.
+>
 
 Reboot your workstation before you continue.
 
@@ -205,8 +203,8 @@ Run the following command.
 
 > [!NOTE]
 > The –pre argument ensures you are receiving the latest RC version of the Knife Azure Plugin which provides access to the latest set of APIs.
-> 
-> 
+>
+>
 
 It’s likely that a number of dependencies will also be installed at the same time.
 
@@ -251,7 +249,6 @@ Modify the C:\chef\cookbooks\webserver\recipes\default.rb file and add the follo
 Save the file once you are done.
 
 ## Creating a template
-
 In this step, you'll generate a template file to used as the default.html page.
 
 Run the following command to generate the template:
@@ -280,8 +277,8 @@ The parameters are self-explanatory. Substitute your particular variables and ru
 
 > [!NOTE]
 > Through the command line, I’m also automating my endpoint network filter rules by using the –tcp-endpoints parameter. I’ve opened up ports 80 and 3389 to provide access to my web page and RDP session.
-> 
-> 
+>
+>
 
 Once you run the command, go to the Azure portal to see your machine begin to provision.
 
@@ -295,11 +292,11 @@ Once the deployment is complete, you should be able to connect to the web servic
 
 ![][11]
 
-As you can see, I got creative with my HTML code.
+This example uses creative HTML code.
 
 Don’t forget you can also connect through an RDP session from the Azure portal via port 3389.
 
-I hope this has been helpful! Go and start your infrastructure as code journey with Azure today!
+Thank you! Go and start your infrastructure as code journey with Azure today!
 
 <!--Image references-->
 [2]: media/chef-automation/2.png
